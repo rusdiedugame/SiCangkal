@@ -1,0 +1,1385 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Si CANGKAL - Chatbot Andal Nambah Gasan Kawal Amun Belajar</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0f7ff',
+                            100: '#e0effe',
+                            500: '#2563eb',
+                            600: '#1d4ed8',
+                            700: '#1e40af',
+                        },
+                        accent: {
+                            50: '#f0fdf4',
+                            500: '#10b981',
+                            600: '#059669',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Font Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Marked.js for Markdown Rendering -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    <!-- KaTeX for Math & Physics Formula Rendering -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+
+    <!-- PDF.js for client-side PDF text extraction -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script>
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    </script>
+
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .chat-scroll::-webkit-scrollbar { width: 6px; }
+        .chat-scroll::-webkit-scrollbar-track { background: #f1f5f9; }
+        .chat-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .prose p { margin-bottom: 0.5rem; }
+        .prose ul { list-style-type: disc; padding-left: 1.25rem; margin-bottom: 0.5rem; }
+        .prose ol { list-style-type: decimal; padding-left: 1.25rem; margin-bottom: 0.5rem; }
+        .prose pre { background-color: #1e293b; color: #f8fafc; padding: 0.75rem; border-radius: 0.5rem; overflow-x: auto; font-size: 0.875rem; }
+        .prose code { background-color: #e2e8f0; color: #0f172a; padding: 0.125rem 0.375rem; border-radius: 0.25rem; font-size: 0.875rem; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased min-h-screen flex flex-col">
+
+    <!-- Top Navigation Header -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <!-- Logo & Title -->
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-accent-500 flex items-center justify-center text-white shadow-md">
+                    <i data-lucide="microscope" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg text-slate-900 leading-tight flex items-center gap-2">
+                        Si CANGKAL
+                        <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">IPA Kelas 7 SMP</span>
+                    </h1>
+                    <p class="text-xs text-slate-500">Chatbot Andal Nambah Gasan Kawal Amun Belajar</p>
+                </div>
+            </div>
+
+            <!-- View Switcher (Siswa / Guru Mode) -->
+            <div class="flex items-center space-x-2">
+                <button id="btnNavStudent" onclick="switchMode('student')" class="px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center gap-2 bg-brand-600 text-white shadow-sm">
+                    <i data-lucide="user" class="w-4 h-4"></i>
+                    <span>Ruang Siswa</span>
+                </button>
+                <button id="btnNavTeacher" onclick="switchMode('teacher')" class="px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center gap-2 bg-slate-100 text-slate-700 hover:bg-slate-200">
+                    <i data-lucide="shield-check" class="w-4 h-4"></i>
+                    <span>Portal Guru</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN STUDENT VIEW -->
+    <main id="viewStudent" class="flex-1 max-w-7xl w-full mx-auto p-3 sm:p-6 flex flex-col md:flex-row gap-6">
+        
+        <!-- Left Sidebar: Topic Selection for IPA Grade 7 -->
+        <aside class="w-full md:w-80 flex flex-col gap-4">
+            
+            <!-- Filter Card -->
+            <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm space-y-4">
+                <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                    <h2 class="font-semibold text-slate-800 flex items-center gap-2">
+                        <i data-lucide="book-open" class="w-4 h-4 text-brand-600"></i>
+                        Materi IPA Kelas 7
+                    </h2>
+                    <span id="badgeMaterialCount" class="text-xs bg-emerald-50 text-emerald-700 font-semibold px-2 py-0.5 rounded-full border border-emerald-200">7 Bab Aktif</span>
+                </div>
+
+                <!-- Info Focus Note -->
+                <div class="bg-emerald-50/70 border border-emerald-200 rounded-xl p-3 text-xs text-emerald-900 leading-relaxed flex gap-2 items-start">
+                    <i data-lucide="sparkles" class="w-4 h-4 text-emerald-600 shrink-0 mt-0.5"></i>
+                    <span>Tutor AI dikhususkan untuk menjawab pertanyaan seputar <strong>Ilmu Pengetahuan Alam (IPA) Kelas VII SMP</strong>.</span>
+                </div>
+
+                <!-- Bab Selector -->
+                <div>
+                    <label class="block text-xs font-medium text-slate-500 mb-1.5">Pilih Fokus Bab / Topik</label>
+                    <div id="topicList" class="space-y-1.5 max-h-64 overflow-y-auto chat-scroll pr-1">
+                        <!-- Dynamic topic pills generated by JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Action Prompts Box -->
+            <div class="bg-gradient-to-br from-brand-50 to-emerald-50 rounded-2xl p-4 border border-brand-100 shadow-sm space-y-3">
+                <h3 class="text-xs font-bold text-brand-700 uppercase tracking-wider flex items-center gap-1.5">
+                    <i data-lucide="help-circle" class="w-4 h-4 text-brand-600"></i>
+                    Bantuan Pertanyaan Cepat
+                </h3>
+                <div class="space-y-2">
+                    <button onclick="quickPrompt('Jelaskan perbedaan massa dan berat benda beserta satuannya')" class="w-full text-left p-2 rounded-xl bg-white border border-slate-200 text-xs font-medium text-slate-700 hover:border-brand-500 hover:text-brand-600 transition flex items-center justify-between group">
+                        <span>⚖️ Massa vs Berat</span>
+                        <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-400 group-hover:text-brand-500"></i>
+                    </button>
+                    <button onclick="quickPrompt('Bagaimana cara menghitung massa jenis benda? Berikan contohnya')" class="w-full text-left p-2 rounded-xl bg-white border border-slate-200 text-xs font-medium text-slate-700 hover:border-brand-500 hover:text-brand-600 transition flex items-center justify-between group">
+                        <span>🧪 Rumus Massa Jenis</span>
+                        <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-400 group-hover:text-brand-500"></i>
+                    </button>
+                    <button onclick="quickPrompt('Jelaskan rumus kalor Q = m.c.dT dan contoh soalnya')" class="w-full text-left p-2 rounded-xl bg-white border border-slate-200 text-xs font-medium text-slate-700 hover:border-brand-500 hover:text-brand-600 transition flex items-center justify-between group">
+                        <span>🔥 Perhitungan Kalor</span>
+                        <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-400 group-hover:text-brand-500"></i>
+                    </button>
+                    <button onclick="quickPrompt('Apa perbedaan ciri makhluk hidup dan benda mati?')" class="w-full text-left p-2 rounded-xl bg-white border border-slate-200 text-xs font-medium text-slate-700 hover:border-brand-500 hover:text-brand-600 transition flex items-center justify-between group">
+                        <span>🌱 Ciri Makhluk Hidup</span>
+                        <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-400 group-hover:text-brand-500"></i>
+                    </button>
+                    <button onclick="quickPrompt('Buatkan 5 soal latihan IPA Kelas 7 beserta kunci jawabannya')" class="w-full text-left p-2 rounded-xl bg-white border border-slate-200 text-xs font-medium text-slate-700 hover:border-brand-500 hover:text-brand-600 transition flex items-center justify-between group">
+                        <span>✍️ 5 Soal Latihan IPA</span>
+                        <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-400 group-hover:text-brand-500"></i>
+                    </button>
+                </div>
+            </div>
+
+        </aside>
+
+        <!-- Chat Area -->
+        <section class="flex-1 bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col h-[calc(100vh-6rem)] min-h-[550px]">
+            
+            <!-- Chat Header -->
+            <div class="px-5 py-3.5 border-b border-slate-200 flex items-center justify-between bg-slate-50/70 rounded-t-2xl">
+                <div class="flex items-center space-x-3">
+                    <div class="relative">
+                        <div class="w-9 h-9 rounded-xl bg-brand-600 text-white flex items-center justify-center font-bold">
+                            <i data-lucide="atom" class="w-5 h-5"></i>
+                        </div>
+                        <span class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-accent-500 border-2 border-white rounded-full"></span>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-slate-800 text-sm flex items-center gap-2">
+                            Ruang Percakapan Tutor Sains
+                        </h3>
+                        <p id="chatActiveTopicInfo" class="text-xs text-slate-500">Menjawab Berdasarkan Kurikulum IPA Kelas 7</p>
+                    </div>
+                </div>
+
+                <div class="flex items-center space-x-2">
+                    <button onclick="clearChatHistory()" title="Mulai Percakapan Baru" class="p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-200/60 rounded-lg transition">
+                        <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Chat Message Window -->
+            <div id="chatMessages" class="flex-1 p-4 sm:p-6 overflow-y-auto chat-scroll space-y-5">
+                <!-- Welcome Assistant Message -->
+                <div class="flex gap-3">
+                    <div class="w-8 h-8 rounded-lg bg-brand-600 text-white flex items-center justify-center shrink-0 mt-0.5">
+                        <i data-lucide="bot" class="w-4 h-4"></i>
+                    </div>
+                    <div class="max-w-[85%] space-y-2">
+                        <div class="p-4 rounded-2xl rounded-tl-none bg-slate-100 text-slate-800 text-sm leading-relaxed border border-slate-200">
+                            <p class="font-semibold text-brand-700 mb-1">Halo Sahabat Sains! 🔬⚡</p>
+                            <p>Saya adalah <strong>Si CANGKAL</strong> (Chatbot Andal Nambah Gasan Kawal Amun Belajar), tutor khusus mata pelajaran **IPA Kelas 7 SMP/MTs**. Saya siap membantu kamu memahami konsep sains, rumus fisika, eksperimen lab, serta klasifikasi biologi.</p>
+                            <p class="mt-2 text-xs text-slate-500">Pilih topik bab di panel kiri atau tanyakan langsung pertanyaanmu di bawah ini!</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chat Input Area -->
+            <div class="p-3 sm:p-4 border-t border-slate-200 bg-white rounded-b-2xl">
+                <form id="chatForm" onsubmit="handleChatSubmit(event)" class="relative">
+                    <textarea id="chatInput" rows="2" placeholder="Tanyakan seputar IPA Kelas 7... (contoh: Mengapa minyak mengapung di atas air?)" 
+                        class="w-full pl-4 pr-24 py-3 text-sm rounded-xl border border-slate-200 focus:border-brand-500 focus:ring-2 focus:ring-brand-100 focus:outline-none resize-none"
+                        onkeydown="if(event.key==='Enter' && !event.shiftKey){ event.preventDefault(); handleChatSubmit(event); }"></textarea>
+                    
+                    <div class="absolute right-2.5 bottom-3 flex items-center space-x-1">
+                        <button type="submit" id="btnSend" class="px-4 py-2 rounded-lg bg-brand-600 hover:bg-brand-700 text-white font-medium text-xs flex items-center gap-1.5 transition shadow-sm disabled:opacity-50">
+                            <span>Kirim</span>
+                            <i data-lucide="send" class="w-3.5 h-3.5"></i>
+                        </button>
+                    </div>
+                </form>
+                <div class="mt-2 flex items-center justify-between text-[11px] text-slate-400 px-1">
+                    <span>Tekan Shift + Enter untuk baris baru</span>
+                    <span class="flex items-center gap-1 text-emerald-600 font-medium"><i data-lucide="check-circle-2" class="w-3 h-3"></i> Database IPA VII Aktif</span>
+                </div>
+            </div>
+
+        </section>
+    </main>
+
+    <!-- MAIN TEACHER VIEW (HIDDEN BY DEFAULT) -->
+    <main id="viewTeacher" class="hidden flex-1 max-w-7xl w-full mx-auto p-3 sm:p-6 flex-col space-y-6">
+        
+        <!-- Auth Overlay (Shown if teacher not authenticated) -->
+        <div id="teacherAuthCard" class="max-w-md mx-auto my-12 bg-white rounded-2xl p-6 border border-slate-200 shadow-lg text-center space-y-4">
+            <div class="w-12 h-12 rounded-full bg-brand-50 text-brand-600 mx-auto flex items-center justify-center">
+                <i data-lucide="lock" class="w-6 h-6"></i>
+            </div>
+            <h2 class="text-xl font-bold text-slate-900">Portal Guru IPA Kelas 7</h2>
+            <p class="text-xs text-slate-500">Masukkan PIN guru untuk mengelola modul & database RAG IPA Kelas 7.</p>
+            <div class="space-y-3">
+                <input type="password" id="inputTeacherPin" placeholder="Sandi Guru (Default: guru123)" class="w-full text-center tracking-widest text-lg font-semibold rounded-xl border border-slate-300 p-2.5 focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                <button onclick="authenticateTeacher()" class="w-full py-2.5 bg-brand-600 text-white rounded-xl font-semibold text-sm hover:bg-brand-700 transition">Masuk Portal Guru</button>
+            </div>
+        </div>
+
+        <!-- Teacher Dashboard Content -->
+        <div id="teacherContent" class="hidden space-y-6">
+            
+            <!-- Dashboard Header Bar -->
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                    <h2 class="text-xl font-bold text-slate-900 flex items-center gap-2">
+                        <i data-lucide="database" class="w-5 h-5 text-brand-600"></i>
+                        Database Modul Materi IPA Kelas 7
+                    </h2>
+                    <p class="text-xs text-slate-500">Kelola ringkasan bab, tambah materi baru, atau upload PDF LKS/Buku Teks IPA.</p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button onclick="openAddMaterialModal()" class="px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-medium text-xs flex items-center gap-1.5 transition">
+                        <i data-lucide="plus" class="w-4 h-4"></i>
+                        <span>Tambah Bab Teks</span>
+                    </button>
+                    <button onclick="openUploadModal()" class="px-4 py-2 rounded-xl bg-accent-600 hover:bg-accent-700 text-white font-medium text-xs flex items-center gap-1.5 transition">
+                        <i data-lucide="file-up" class="w-4 h-4"></i>
+                        <span>Upload PDF IPA</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Teacher Tabs -->
+            <div class="flex border-b border-slate-200 space-x-6">
+                <button onclick="switchTeacherTab('tabList')" id="tabBtnList" class="pb-3 text-sm font-semibold text-brand-600 border-b-2 border-brand-600 flex items-center gap-2">
+                    <i data-lucide="list-checks" class="w-4 h-4"></i> Modul IPA VII (<span id="teacherCountBadge">7</span>)
+                </button>
+                <button onclick="switchTeacherTab('tabSandbox')" id="tabBtnSandbox" class="pb-3 text-sm font-semibold text-slate-500 border-b-2 border-transparent hover:text-slate-800 flex items-center gap-2">
+                    <i data-lucide="terminal" class="w-4 h-4"></i> Uji RAG Semantik
+                </button>
+                <button onclick="switchTeacherTab('tabLogs')" id="tabBtnLogs" class="pb-3 text-sm font-semibold text-slate-500 border-b-2 border-transparent hover:text-slate-800 flex items-center gap-2">
+                    <i data-lucide="bar-chart-2" class="w-4 h-4"></i> Log Pertanyaan Siswa
+                </button>
+            </div>
+
+            <!-- Tab 1: Database Materials List -->
+            <div id="tabList" class="space-y-4">
+                
+                <!-- Filter Bar -->
+                <div class="flex flex-wrap items-center justify-between gap-3 bg-white p-3.5 rounded-xl border border-slate-200">
+                    <div class="flex items-center gap-3 w-full sm:w-auto">
+                        <div class="relative flex-1 sm:w-64">
+                            <i data-lucide="search" class="w-4 h-4 absolute left-3 top-2.5 text-slate-400"></i>
+                            <input type="text" id="teacherSearchKey" oninput="renderTeacherMaterials()" placeholder="Cari judul/materi IPA..." class="w-full pl-9 pr-3 py-1.5 text-xs rounded-lg border border-slate-200 focus:outline-none focus:ring-1 focus:ring-brand-500">
+                        </div>
+                    </div>
+                    <button onclick="resetDefaultMaterials()" class="text-xs text-slate-500 hover:text-slate-800 underline flex items-center gap-1">
+                        <i data-lucide="rotate-ccw" class="w-3 h-3"></i> Muat Ulang 7 Bab Standar IPA VII
+                    </button>
+                </div>
+
+                <!-- Material Cards Grid -->
+                <div id="teacherMaterialGrid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Dynamic Material Items -->
+                </div>
+            </div>
+
+            <!-- Tab 2: RAG Sandbox Playground -->
+            <div id="tabSandbox" class="hidden bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                <h3 class="font-bold text-slate-800 text-sm flex items-center gap-2">
+                    <i data-lucide="bug" class="w-4 h-4 text-brand-600"></i>
+                    Uji Pencarian Chunk RAG IPA Kelas 7
+                </h3>
+                <p class="text-xs text-slate-500">Ketik pertanyaan sains di bawah untuk mengecek chunk mana yang ditarik oleh engine RAG.</p>
+                
+                <div class="flex gap-2">
+                    <input type="text" id="sandboxQuery" placeholder="Contoh: Mengapa es bisa terapung di air?" class="flex-1 text-sm rounded-xl border border-slate-300 p-2.5 focus:outline-none focus:ring-2 focus:ring-brand-500">
+                    <button onclick="runRAGTest()" class="px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-sm font-semibold transition">Uji Pencarian</button>
+                </div>
+
+                <div id="sandboxResults" class="hidden space-y-3 pt-3 border-t border-slate-200">
+                    <!-- Results from search engine -->
+                </div>
+            </div>
+
+            <!-- Tab 3: Student Logs Analytics -->
+            <div id="tabLogs" class="hidden bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h3 class="font-bold text-slate-800 text-sm">Riwayat Pertanyaan IPA Siswa</h3>
+                        <p class="text-xs text-slate-500">Pantau pertanyaan topik IPA apa yang paling sering diajukan siswa.</p>
+                    </div>
+                    <button onclick="clearStudentLogs()" class="text-xs text-red-600 hover:underline">Hapus Log</button>
+                </div>
+                
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs">
+                        <thead class="bg-slate-50 text-slate-600 uppercase border-b border-slate-200">
+                            <tr>
+                                <th class="p-3">Waktu</th>
+                                <th class="p-3">Pertanyaan Siswa</th>
+                                <th class="p-3">Status RAG</th>
+                                <th class="p-3">Sumber Rujukan</th>
+                            </tr>
+                        </thead>
+                        <tbody id="studentLogsTableBody" class="divide-y divide-slate-100">
+                            <!-- Dynamic log rows -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- MODAL: Tambah / Edit Teks Materi -->
+    <div id="modalMaterial" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-white rounded-2xl max-w-2xl w-full p-6 space-y-4 max-h-[90vh] overflow-y-auto chat-scroll shadow-xl">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                <h3 id="modalMaterialTitle" class="font-bold text-slate-800 text-base">Tambah Modul IPA Kelas 7 Baru</h3>
+                <button onclick="closeModal('modalMaterial')" class="p-1 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <form id="formMaterial" onsubmit="saveMaterial(event)" class="space-y-3 text-xs">
+                <input type="hidden" id="matId">
+                
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div>
+                        <label class="block font-medium text-slate-700 mb-1">Mata Pelajaran</label>
+                        <input type="text" id="matSubject" value="IPA" readonly class="w-full p-2 bg-slate-100 border border-slate-300 rounded-lg font-semibold">
+                    </div>
+                    <div>
+                        <label class="block font-medium text-slate-700 mb-1">Kelas</label>
+                        <input type="text" id="matGrade" value="VII" readonly class="w-full p-2 bg-slate-100 border border-slate-300 rounded-lg font-semibold">
+                    </div>
+                    <div>
+                        <label class="block font-medium text-slate-700 mb-1">Bab / Topik *</label>
+                        <input type="text" id="matBab" required placeholder="Bab 1 Hakikat Sains" class="w-full p-2 border border-slate-300 rounded-lg">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block font-medium text-slate-700 mb-1">Judul Materi *</label>
+                    <input type="text" id="matTitle" required placeholder="Contoh: Metode Ilmiah & Pengukuran Besaran IPA" class="w-full p-2 border border-slate-300 rounded-lg text-sm font-semibold">
+                </div>
+
+                <div>
+                    <label class="block font-medium text-slate-700 mb-1">Tujuan Pembelajaran</label>
+                    <input type="text" id="matGoal" placeholder="Contoh: Siswa dapat menggunakan jangka sorong & mengidentifikasi variabel eksperimen" class="w-full p-2 border border-slate-300 rounded-lg">
+                </div>
+
+                <div>
+                    <label class="block font-medium text-slate-700 mb-1">Isi Ringkasan Materi Lengkap *</label>
+                    <textarea id="matContent" rows="6" required placeholder="Tuliskan isi ringkasan materi IPA kelas 7 di sini..." class="w-full p-2 border border-slate-300 rounded-lg resize-none"></textarea>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block font-medium text-slate-700 mb-1">Rumus / Formula Penting</label>
+                        <textarea id="matFormula" rows="2" placeholder="Contoh: Massa jenis (ρ) = m / V" class="w-full p-2 border border-slate-300 rounded-lg resize-none"></textarea>
+                    </div>
+                    <div>
+                        <label class="block font-medium text-slate-700 mb-1">Istilah Penting / Glosarium</label>
+                        <textarea id="matGlossary" rows="2" placeholder="Contoh: Variabel Bebas = faktor yang diubah..." class="w-full p-2 border border-slate-300 rounded-lg resize-none"></textarea>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block font-medium text-slate-700 mb-1">Contoh Soal & Pembahasan</label>
+                    <textarea id="matExample" rows="3" placeholder="Contoh Soal: Benda A bermassa 100g... Pembahasan: ..." class="w-full p-2 border border-slate-300 rounded-lg resize-none"></textarea>
+                </div>
+
+                <div>
+                    <label class="block font-medium text-slate-700 mb-1">Nama Buku Rujukan / Sumber</label>
+                    <input type="text" id="matSource" placeholder="Buku Teks Utama IPA Kelas 7 Kemendikbudristek Kurikulum Merdeka" class="w-full p-2 border border-slate-300 rounded-lg">
+                </div>
+
+                <div class="pt-3 border-t border-slate-100 flex justify-end space-x-2">
+                    <button type="button" onclick="closeModal('modalMaterial')" class="px-4 py-2 rounded-lg border border-slate-300 text-slate-600 font-medium hover:bg-slate-50">Batal</button>
+                    <button type="submit" class="px-5 py-2 rounded-lg bg-brand-600 text-white font-semibold hover:bg-brand-700 shadow-sm">Simpan Materi IPA</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: Upload PDF IPA Document -->
+    <div id="modalUpload" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-white rounded-2xl max-w-lg w-full p-6 space-y-4 shadow-xl">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                <h3 class="font-bold text-slate-800 text-base flex items-center gap-2">
+                    <i data-lucide="file-up" class="w-5 h-5 text-emerald-600"></i>
+                    Upload Dokumen Modul IPA VII (PDF / TXT)
+                </h3>
+                <button onclick="closeModal('modalUpload')" class="p-1 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <div class="space-y-3 text-xs">
+                <div>
+                    <label class="block font-medium text-slate-700 mb-1">Bab / Topik Dokumen</label>
+                    <input type="text" id="uploadBab" placeholder="Contoh: Bab Suhu dan Kalor" class="w-full p-2 border border-slate-300 rounded-lg">
+                </div>
+
+                <!-- Drag-and-drop file upload zone -->
+                <div class="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center hover:border-brand-500 transition cursor-pointer bg-slate-50" onclick="document.getElementById('fileInputDoc').click()">
+                    <i data-lucide="upload-cloud" class="w-10 h-10 text-slate-400 mx-auto mb-2"></i>
+                    <p class="font-semibold text-slate-700 text-sm">Klik untuk memilih file PDF atau TXT IPA VII</p>
+                    <p class="text-[11px] text-slate-400 mt-1">Ekstraksi teks otomatis akan memecah materi menjadi database RAG AI</p>
+                    <input type="file" id="fileInputDoc" accept=".pdf, .txt" class="hidden" onchange="handleFileSelected(event)">
+                </div>
+
+                <div id="uploadStatusText" class="text-xs text-brand-600 font-medium hidden">
+                    <i data-lucide="loader" class="w-3.5 h-3.5 animate-spin inline mr-1"></i> Memproses teks dari dokumen PDF IPA...
+                </div>
+
+                <div id="filePreviewArea" class="hidden bg-slate-100 p-3 rounded-lg max-h-32 overflow-y-auto text-[11px] text-slate-600">
+                    <strong>Pratinjau Teks Dokumen:</strong>
+                    <p id="filePreviewContent" class="mt-1 whitespace-pre-wrap"></p>
+                </div>
+            </div>
+
+            <div class="pt-3 border-t border-slate-100 flex justify-end space-x-2">
+                <button type="button" onclick="closeModal('modalUpload')" class="px-4 py-2 rounded-lg border border-slate-300 text-slate-600 text-xs font-medium hover:bg-slate-50">Batal</button>
+                <button type="button" id="btnConfirmUpload" onclick="processDocUpload()" disabled class="px-5 py-2 rounded-lg bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-700 shadow-sm disabled:opacity-50">Impor ke RAG IPA</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 bg-slate-900 text-white px-4 py-3 rounded-xl shadow-lg flex items-center gap-3 text-xs font-medium">
+        <i data-lucide="info" class="w-4 h-4 text-brand-400" id="toastIcon"></i>
+        <span id="toastMsg">Notifikasi</span>
+    </div>
+
+    <script>
+        // Comprehensive IPA Kelas 7 Curriculum Merdeka Seed Materials
+        const DEFAULT_MATERIALS = [
+            {
+                id: "ipa_7_bab1",
+                subject: "IPA",
+                grade: "VII",
+                bab: "Bab 1: Hakikat Sains & Pengukuran",
+                title: "Metode Ilmiah, Besaran, Satuan, dan Pengukuran IPA",
+                goal: "Siswa memahami langkah metode ilmiah, perbedaan besaran pokok vs turunan, serta membaca alat ukur presisi.",
+                content: "Sains atau IPA adalah ilmu pengetahuan sistematis tentang alam semesta melalui observasi dan eksperimen. Tahapan Metode Ilmiah meliputi: 1. Merumuskan Masalah, 2. Hipotesis (dugaan sementara), 3. Merancang & Melakukan Eksperimen, 4. Mengumpulkan & Menganalisis Data, 5. Menarik Kesimpulan.\n\nDalam pengukuran terdapat Variabel Bebas (faktor yang diubah), Variabel Terikat (faktor yang diukur/diamati), dan Variabel Kontrol (faktor yang dijaga konstan). Besaran Pokok ada 7: Panjang (meter), Massa (kilogram), Waktu (sekon), Suhu (Kelvin), Kuat Arus (Ampere), Intensitas Cahaya (Candela), dan Jumlah Zat (Mol). Besaran Turunan adalah besaran yang diturunkan dari besaran pokok, contohnya Luas ($m^2$), Volume ($m^3$), Kecepatan ($m/s$), dan Massa Jenis ($kg/m^3$). Alat ukur massa adalah neraca, alat ukur panjang presisi adalah jangka sorong dan mikrometer sekrup.",
+                formula: "Besaran Pokok: Panjang(m), Massa(kg), Waktu(s), Suhu(K).\nLuas = p x l ($m^2$)\nVolume Kubus = $s^3$ ($m^3$)",
+                glossary: "Hipotesis = Dugaan awal berdasarkan teori.\nVariabel Bebas = Faktor eksperimen yang sengaja diubah.\nBesaran Pokok = Besaran utama yang satuannya telah ditetapkan secara internasional (SI).",
+                example: "Soal: Tentukan mana yang termasuk besaran pokok dan besaran turunan dari data berikut: Panjang meja, Luas lapangan, Massa batu, Kecepatan mobil!\nPembahasan:\nBesaran Pokok: Panjang meja (satuannya meter) dan Massa batu (satuannya kg).\nBesaran Turunan: Luas lapangan ($m^2$) dan Kecepatan mobil ($m/s$).",
+                source: "Buku IPA Kelas VII Kurikulum Merdeka Kemendikbud - Bab 1",
+                updatedAt: "2026-10-19"
+            },
+            {
+                id: "ipa_7_bab2",
+                subject: "IPA",
+                grade: "VII",
+                bab: "Bab 2: Zat dan Perubahannya",
+                title: "Wujud Zat, Perubahan Fisika/Kimia, dan Massa Jenis Benda",
+                goal: "Siswa dapat menjelaskan susunan partikel zat, perubahan wujud, serta menghitung rumus massa jenis $(\\rho = m / V)$.",
+                content: "Zat adalah segala sesuatu yang memiliki massa dan menempati ruang (volume). Zat dikelompokkan menjadi padat, cair, dan gas.\n- Padat: Bentuk & volume tetap, jarak antarpartikel sangat rapat, gaya tarik kuat.\n- Cair: Bentuk mengikuti wadah, volume tetap, jarak partikel agak renggang.\n- Gas: Bentuk & volume berubah mengikuti wadahnya, jarak partikel sangat berjauhan dan bergerak bebas.\n\nPerubahan Wujud Zat:\n- Mencair (Padat -> Cair), Membeku (Cair -> Padat), Menguap (Cair -> Gas), Mengembun (Gas -> Cair), Menyublim (Padat -> Gas), Mengkristal/Mengkristalisasi (Gas -> Padat).\n\nPerubahan Fisika adalah perubahan yang tidak menghasilkan zat baru (contoh: es meleleh, beras ditumbuk jadi tepung). Perubahan Kimia adalah perubahan yang menghasilkan zat baru dengan sifat berbeda (contoh: besi berkarat, kayu terbakar jadi abu, makanan membusuk).\n\nMassa Jenis ($\\rho$) merupakan kerapatan massa zat per satuan volume.",
+                formula: "Massa Jenis: $$\\rho = \\frac{m}{V}$$\nKeterangan:\n$\\rho$ = Massa Jenis ($kg/m^3$ atau $g/cm^3$)\n$m$ = Massa Benda ($kg$ atau $gram$)\n$V$ = Volume Benda ($m^3$ atau $cm^3$)\nKonversi: $1 g/cm^3 = 1.000 kg/m^3$. Benda mengapung jika $\\rho_{benda} < \\rho_{cair}$.",
+                glossary: "Sublimasi = Perubahan wujud padat langsung menjadi gas.\nDiffusi = Pergerakan partikel dari konsentrasi tinggi ke rendah.\nPerubahan Kimia = Perubahan zat yang disertai timbulnya gas, endapan, perubahan warna, atau energi panas.",
+                example: "Soal: Sebuah kubus besi memiliki volume $50 cm^3$ dan massanya $395 gram$. Berapakah massa jenis kubus besi tersebut?\nPembahasan:\nDiketahui: $m = 395 g$, $V = 50 cm^3$.\nFormula: $\\rho = \\frac{m}{V} = \\frac{395}{50} = 7,9 g/cm^3$.\nJika diubah ke $kg/m^3$: $7,9 \\times 1000 = 7.900 kg/m^3$.",
+                source: "Buku Teks IPA VII Kemendikbud - Bab 2 Zat & Perubahannya",
+                updatedAt: "2026-10-19"
+            },
+            {
+                id: "ipa_7_bab3",
+                subject: "IPA",
+                grade: "VII",
+                bab: "Bab 3: Suhu, Kalor, dan Pemuaian",
+                title: "Konversi Skala Termometer, Rumus Kalor, dan Pemuaian Zat",
+                goal: "Siswa dapat mengonversi skala suhu (Celsius, Reamur, Fahrenheit, Kelvin) dan menghitung kalor $Q = m \\cdot c \\cdot \\Delta T$.",
+                content: "Suhu adalah tingkat panas atau dinginnya suatu benda yang diukur dengan Termometer. Perbandingan skala termometer Celcius (C), Reamur (R), Fahrenheit (F), dan Kelvin (K):\nPerbandingan $C : R : (F - 32) : (K - 273) = 5 : 4 : 9 : 5$.\n\nKalor adalah bentuk energi panas yang berpindah dari benda bersuhu tinggi ke benda bersuhu lebih rendah. Perpindahan kalor ada 3 cara:\n1. Konduksi: Perpindahan panas melalui zat padat tanpa perantara partikel (contoh: sendok logam terasa panas saat mengaduk teh panas).\n2. Konveksi: Perpindahan panas disertai perpindahan partikel zat (terjadi pada zat cair & gas, contoh: angin darat/laut, air mendidih).\n3. Radiasi: Perpindahan panas secara langsung tanpa zat perantara (contoh: panas matahari sampai ke bumi, berada dekat api unggun).\n\nPemuaian adalah bertambahnya ukuran benda (panjang, luas, volume) akibat bertambahnya suhu.",
+                formula: "Konversi Suhu:\n- $R = \\frac{4}{5} \\times C$\n- $F = (\\frac{9}{5} \\times C) + 32$\n- $K = C + 273$\n\nRumus Kalor Perubahan Suhu:\n$$Q = m \\cdot c \\cdot \\Delta T$$\nKeterangan: $Q$ = Kalor (Joule atau kalori), $m$ = massa ($kg$), $c$ = kalor jenis ($J/kg^\\circ C$), $\\Delta T = T_{akhir} - T_{awal}$ (Perubahan Suhu).\n\nKalor Lebur/Penguapan: $Q = m \\cdot L$",
+                glossary: "Konduktor = Benda penghantar panas yang baik (besi, tembaga, aluminium).\nIsolator = Benda penghantar panas yang buruk (kayu, plastik, kain).\nKalor Jenis = Banyaknya kalor yang dibutuhkan $1 kg$ zat untuk menaikkan suhunya sebesar $1^\\circ C$.",
+                example: "Soal: Air bermassa $2 kg$ bersuhu $20^\\circ C$ dipanaskan hingga $70^\\circ C$. Jika kalor jenis air $4.200 J/kg^\\circ C$, berapa kalor yang diserap air?\nPembahasan:\nDiketahui: $m = 2 kg$, $\\Delta T = 70 - 20 = 50^\\circ C$, $c = 4.200 J/kg^\\circ C$.\nJawab: $Q = m \\cdot c \\cdot \\Delta T = 2 \\times 4.200 \\times 50 = 420.000 Joule = 420 kJ$.",
+                source: "Modul Sains Fisika SMP Kelas 7 - Bab 3 Suhu & Kalor",
+                updatedAt: "2026-10-19"
+            },
+            {
+                id: "ipa_7_bab4",
+                subject: "IPA",
+                grade: "VII",
+                bab: "Bab 4: Gerak dan Gaya",
+                title: "Kelajuan, Kecepatan, Hukum Newton, dan Gaya Fisika",
+                goal: "Siswa memahami perbedaan jarak vs perpindahan, perhitungan kecepatan $v = s / t$, serta Hukum I, II, dan III Newton.",
+                content: "Gerak bersifat relatif. Jarak adalah panjang lintasan total yang ditempuh (besaran skalar), sedangkan Perpindahan adalah perubahan posisi awal ke posisi akhir (besaran vektor).\n- Gerak Lurus Beraturan (GLB): Gerak lintasan lurus dengan kelajuan tetap (percepatan $a = 0$).\n- Gerak Lurus Berubah Beraturan (GLBB): Gerak dengan percepatan ($a$) tetap.\n\nGaya ($F$) adalah tarikan atau dorongan yang menyebabkan benda bergerak, berhenti, atau berubah bentuk (Satuan: Newton).\n\nHukum Newton tentang Gerak:\n1. Hukum I Newton (Inersia/Kelembaman): Benda cenderung mempertahankan keadaannya. Jika $\\Sigma F = 0$, benda diam tetap diam, benda bergerak tetap bergerak lurus beraturan.\n2. Hukum II Newton: Percepatan berbanding lurus dengan gaya dan berbanding terbalik dengan massa ($F = m \\cdot a$).\n3. Hukum III Newton (Aksi-Reaksi): $F_{aksi} = -F_{reaksi}$. Setiap gaya aksi menghasilkan gaya reaksi sama besar berlawanan arah.",
+                formula: "Rumus Kelajuan / Kecepatan:\n$$v = \\frac{s}{t}$$\nKeterangan: $v$ = kecepatan ($m/s$), $s$ = jarak/perpindahan ($m$), $t$ = waktu ($s$).\n\nHukum II Newton: $$F = m \\cdot a$$\n$F$ = Gaya ($N$), $m$ = massa ($kg$), $a$ = percepatan ($m/s^2$).",
+                glossary: "Inersia = Sifat kelembaman benda untuk mempertahankan posisi asalnya.\nGaya Gesek = Gaya yang berlawanan arah gerak akibat sentuhan dua permukaan.\nPercepatan = Perubahan kecepatan tiap satuan waktu.",
+                example: "Soal: Sebuah mobil bergerak sejauh 120 meter dalam waktu 6 detik. Berapakah kelajuan mobil tersebut?\nPembahasan:\nDiketahui: $s = 120 m$, $t = 6 s$.\nFormula: $v = \\frac{s}{t} = \\frac{120}{6} = 20 m/s$.",
+                source: "Buku Paket IPA Kelas 7 Kurikulum Merdeka - Bab 4",
+                updatedAt: "2026-10-19"
+            },
+            {
+                id: "ipa_7_bab5",
+                subject: "IPA",
+                grade: "VII",
+                bab: "Bab 5: Klasifikasi Makhluk Hidup",
+                title: "Ciri Makhluk Hidup, Mikroskop, Kunci Determinasi & Taksonomi",
+                goal: "Siswa dapat menyebutkan ciri-ciri kehidupan, mengidentifikasi 5 Kingdom Whittaker, dan menggunakan mikroskop.",
+                content: "Makhluk hidup (Biotik) berbeda dari benda mati (Abiotik). Ciri-ciri Makhluk Hidup meliputi:\n1. Bernapas (Respirasi)\n2. Membutuhkan Nutrisi/Makanan\n3. Bergerak\n4. Tumbuh dan Berkembang\n5. Berkembang Biak (Reproduksi)\n6. Peka terhadap Rangsangan (Iritabilitas)\n7. Mengeluarkan Zat Sisa (Ekskresi)\n8. Beradaptasi.\n\nSistem Klasifikasi 5 Kingdom (Robert H. Whittaker):\n1. Monera: Uniseluler, Prokariotik (tidak bermembran inti), contoh: Bakteri dan Ganggang Biru.\n2. Protista: Eukariotik sederhana, ada yang mirip hewan (Protozoa), tumbuhan (Alga), atau jamur.\n3. Fungi (Jamur): Eukariotik, tidak berklorofil, heterotrof (saprofit/parasit).\n4. Plantae (Tumbuhan): Eukariotik, multiseluler, memiliki klorofil (Autotrof).\n5. Animalia (Hewan): Multiseluler, eukariotik, tidak berklorofil (Heterotrof), dibagi Avertebrata dan Verterbrata.\n\nTingkatan Takson: Kingdom -> Filum/Divisi -> Kelas -> Ordo -> Famili -> Genus -> Spesies.",
+                formula: "Aturan Binomial Nomenklatur (Linnaeus):\nNama ilmiah terdiri 2 kata latin. Kata 1 = Genus (Huruf awal kapital), Kata 2 = Spesies (Huruf kecil semua). Dicetak miring atau digarisbawahi terpisah. Contoh: *Panthera tigris* atau *Oryza sativa*.",
+                glossary: "Autotrof = Mampu membuat makanan sendiri melalui fotosintesis.\nProkariotik = Sel yang belum memiliki membran inti sel.\nDeterminasi = Kunci dikotom untuk mengidentifikasi kelompok kelompok spesies.",
+                example: "Soal: Mengapa Jamur (Fungi) dipisahkan dari kelompok Tumbuhan (Plantae)?\nPembahasan: Karena jamur tidak memiliki klorofil sehingga tidak mampu melakukan fotosintesis (bersifat heterotrof), sedangkan tumbuhan memiliki klorofil dan bersifat autotrof.",
+                source: "Buku IPA Kelas VII Biologi SMP - Bab 5 Klasifikasi",
+                updatedAt: "2026-10-19"
+            },
+            {
+                id: "ipa_7_bab6",
+                subject: "IPA",
+                grade: "VII",
+                bab: "Bab 6: Ekologi dan Keanekaragaman Hayati",
+                title: "Ekosistem, Rantai Makanan, Simbiosis, dan Konservasi Indonesia",
+                goal: "Siswa memahami interaksi antar komponen ekosistem, piramida energi, dan keterancaman keanekaragaman hayati.",
+                content: "Ekosistem adalah hubungan timbal balik antara komponen biotik (makhluk hidup) dan komponen abiotik (tanah, air, udara, cahaya matahari, suhu).\n\nTingkatan Organisasi Ekologi: Individu -> Populasi -> Komunitas -> Ekosistem -> Bioma -> Biosfer.\n\nInteraksi Makhluk Hidup:\n1. Rantai Makanan & Jaring-jaring Makanan: Perpindahan energi dari Produsen (tumbuhan hijau) -> Konsumen I (Herbivora) -> Konsumen II (Karnivora) -> Konsumen Puncak -> Pengurai (Dekomposer seperti bakteri/jamur).\n2. Simbiosis:\n   - Simbiosis Mutualisme: Kedua pihak diuntungkan (contoh: Lebah dan Bunga, Bintil akar *Rhizobium* dan Legum).\n   - Simbiosis Komensalisme: Satu beruntung, satu tidak dirugikan/diuntungkan (contoh: Ikan Remora dan Hiu, Bunga Anggrek di pohon).\n   - Simbiosis Parasitisme: Satu untung, satu dirugikan (contoh: Cacing pita di usus manusia, Tali putri pada tanaman inang).\n   - Predasi & Kompetisi.",
+                formula: "Aliran Energi Ekosistem: HANYA sekitar 10% energi yang diteruskan ke tingkat trofik berikutnya dalam piramida energi.",
+                glossary: "Dekomposer = Organisme pengurai sisa bahan organik menjadi hara mineral (bakteri dan jamur).\nFlora & Fauna Endemik = Hewan/tumbuhan khas yang hanya ada di wilayah tertentu (contoh: Komodo, Cenderawasih, Bunga Rafflesia arnoldii).",
+                example: "Soal: Pada jaring-jaring makanan di sawah, jika populasi katak mendadak habis karena diburu, apa dampak pada populasi belalang dan ular?\nPembahasan:\nPopulasi belalang akan meningkat drastis karena pemangsanya (katak) berkurang.\nPopulasi ular akan menurun karena sumber makanan utamanya (katak) berkurang.",
+                source: "Modul Ekologi IPA Kelas VII Kemendikbud - Bab 6",
+                updatedAt: "2026-10-19"
+            },
+            {
+                id: "ipa_7_bab7",
+                subject: "IPA",
+                grade: "VII",
+                bab: "Bab 7: Bumi dan Tata Surya",
+                title: "Sistem Tata Surya, Rotasi & Revolusi Bumi, serta Gerhana",
+                goal: "Siswa memahami urutan planet tata surya, akibat rotasi dan revolusi bumi/bulan, serta proses terjadinya gerhana.",
+                content: "Tata Surya terdiri atas Matahari sebagai pusat gravitational, 8 Planet, Asteroid, Komet, dan Meteoroid.\n\nUrutan 8 Planet dari terdekat dengan matahari:\n1. Merkurius\n2. Venus (Planet terpanas, bintang fajar)\n3. Bumi (Satu-satunya planet berpenghuni)\n4. Mars (Planet merah)\n5. Yupiter (Planet terbesar)\n6. Saturnus (Cincin indah yang tebal)\n7. Uranus\n8. Neptunus (Planet terluar)\nPlanet Dalam (Terestrial): Merkurius, Venus, Bumi, Mars.\nPlanet Luar (Jovian): Yupiter, Saturnus, Uranus, Neptunus.\n\nGerak Bumi & Bulan:\n- Rotasi Bumi (perputaran pada porosnya = 24 jam): Menyebabkan pergantian siang & malam, gerak semu harian matahari, perbedaan waktu di bumi.\n- Revolusi Bumi (mengelilingi matahari = 365,25 hari): Menyebabkan pergantian musim, gerak semu tahunan matahari, perubahan lamanya siang dan malam.\n\nGerhana:\n- Gerhana Matahari: Posisi Bulan berada di antara Matahari dan Bumi pada satu garis lurus.\n- Gerhana Bulan: Posisi Bumi berada di antara Matahari dan Bulan pada satu garis lurus.",
+                formula: "Hukum Kepler I: Orbit planet berbentuk elips dengan matahari di salah satu titik fokusnya.\nUmbra = Daerah bayangan inti yang sangat gelap.\nPenumbra = Daerah bayangan samar/kabur.",
+                glossary: "Rotasi = Perputaran benda langit pada porosnya sendiri.\nRevolusi = Pergerakan benda langit mengelilingi pusat gravitasi (Matahari).\nPasang Surut Laut = Pengaruh gaya gravitasi Bulan dan Matahari terhadap air laut Bumi.",
+                example: "Soal: Mengapa saat di Indonesia bagian barat (WIB) pukul 07.00 pagi, di Indonesia bagian timur (WIT) sudah pukul 09.00 pagi?\nPembahasan: Hal ini disebabkan oleh efek Rotasi Bumi dari barat ke timur, yang mengakibatkan perbedaan zona waktu di Bumi sebesar $15^\\circ$ bujur = 1 jam.",
+                source: "Buku Sains Astronomi IPA Kelas VII Kemendikbud - Bab 7",
+                updatedAt: "2026-10-19"
+            }
+        ];
+
+        // State Management
+        let appMaterials = [];
+        let activeChatTopic = null;
+        let chatHistory = [];
+        let studentQueryLogs = [];
+        let uploadedExtractedText = "";
+        let isAuthenticatedTeacher = false;
+
+        window.addEventListener('DOMContentLoaded', () => {
+            loadMaterialsFromStorage();
+            loadStudentLogsFromStorage();
+            renderTopicsList();
+            renderTeacherMaterials();
+            renderStudentLogsTable();
+            lucide.createIcons();
+        });
+
+        // Local Storage Helpers
+        function loadMaterialsFromStorage() {
+            const stored = localStorage.getItem('asisten_belajar_ipa7_materials');
+            if (stored) {
+                try {
+                    appMaterials = JSON.parse(stored);
+                } catch(e) {
+                    appMaterials = [...DEFAULT_MATERIALS];
+                }
+            } else {
+                appMaterials = [...DEFAULT_MATERIALS];
+                saveMaterialsToStorage();
+            }
+            updateMaterialBadgeCount();
+        }
+
+        function saveMaterialsToStorage() {
+            localStorage.setItem('asisten_belajar_ipa7_materials', JSON.stringify(appMaterials));
+            updateMaterialBadgeCount();
+        }
+
+        function loadStudentLogsFromStorage() {
+            const stored = localStorage.getItem('asisten_belajar_ipa7_logs');
+            if (stored) {
+                try { studentQueryLogs = JSON.parse(stored); } catch(e) { studentQueryLogs = []; }
+            }
+        }
+
+        function saveStudentLogsToStorage() {
+            localStorage.setItem('asisten_belajar_ipa7_logs', JSON.stringify(studentQueryLogs));
+        }
+
+        function resetDefaultMaterials() {
+            appMaterials = [...DEFAULT_MATERIALS];
+            saveMaterialsToStorage();
+            renderTopicsList();
+            renderTeacherMaterials();
+            showToast("Database dikembalikan ke 7 Bab Standar IPA VII!", "check");
+        }
+
+        function updateMaterialBadgeCount() {
+            const badge = document.getElementById('badgeMaterialCount');
+            const teacherBadge = document.getElementById('teacherCountBadge');
+            if (badge) badge.textContent = `${appMaterials.length} Bab IPA VII`;
+            if (teacherBadge) teacherBadge.textContent = appMaterials.length;
+        }
+
+        function switchMode(mode) {
+            const btnS = document.getElementById('btnNavStudent');
+            const btnT = document.getElementById('btnNavTeacher');
+            const viewS = document.getElementById('viewStudent');
+            const viewT = document.getElementById('viewTeacher');
+
+            if (mode === 'student') {
+                btnS.className = "px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center gap-2 bg-brand-600 text-white shadow-sm";
+                btnT.className = "px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center gap-2 bg-slate-100 text-slate-700 hover:bg-slate-200";
+                viewS.style.display = "flex";
+                viewT.style.display = "none";
+            } else {
+                btnT.className = "px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center gap-2 bg-brand-600 text-white shadow-sm";
+                btnS.className = "px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center gap-2 bg-slate-100 text-slate-700 hover:bg-slate-200";
+                viewS.style.display = "none";
+                viewT.style.display = "flex";
+            }
+            lucide.createIcons();
+        }
+
+        function renderTopicsList() {
+            const container = document.getElementById('topicList');
+            container.innerHTML = '';
+
+            if (appMaterials.length === 0) {
+                container.innerHTML = `<p class="text-xs text-slate-400 italic p-2">Belum ada materi IPA yang tersimpan.</p>`;
+                return;
+            }
+
+            appMaterials.forEach(m => {
+                const isSelected = activeChatTopic === m.id;
+                const div = document.createElement('div');
+                div.onclick = () => selectTopic(m.id);
+                div.className = `p-2.5 rounded-xl text-xs font-medium cursor-pointer transition border flex flex-col gap-1 ${isSelected ? 'bg-emerald-50 border-emerald-500 text-emerald-800 shadow-sm' : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'}`;
+                div.innerHTML = `
+                    <div class="flex items-center justify-between">
+                        <span class="font-bold truncate text-slate-900">${m.bab}</span>
+                        <span class="text-[10px] px-1.5 py-0.2 rounded bg-white text-emerald-700 font-semibold border border-emerald-200">IPA 7</span>
+                    </div>
+                    <span class="text-[11px] text-slate-500 truncate">${m.title}</span>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function selectTopic(matId) {
+            if (activeChatTopic === matId) {
+                activeChatTopic = null; // deselect
+            } else {
+                activeChatTopic = matId;
+            }
+            renderTopicsList();
+
+            const topicInfo = document.getElementById('chatActiveTopicInfo');
+            if (activeChatTopic) {
+                const item = appMaterials.find(m => m.id === activeChatTopic);
+                topicInfo.textContent = `Fokus Topik: ${item.bab}`;
+                showToast(`Fokus materi diset ke: ${item.bab}`, 'info');
+            } else {
+                topicInfo.textContent = `Menjawab Berdasarkan Kurikulum IPA Kelas 7`;
+            }
+        }
+
+        // TF-IDF & Keyword semantic scoring engine over IPA Kelas 7 chunks
+        function performRAGSearch(queryText, topK = 3) {
+            let candidateChunks = [];
+
+            appMaterials.forEach(mat => {
+                // If student selected specific topic, give boost or filter
+                if (activeChatTopic && mat.id !== activeChatTopic) {
+                    // still allow, but focus on selected topic
+                }
+
+                // Chunk 1: Content
+                candidateChunks.push({
+                    matId: mat.id,
+                    title: mat.title,
+                    subject: mat.subject,
+                    grade: mat.grade,
+                    bab: mat.bab,
+                    source: mat.source,
+                    chunkType: "Ringkasan Konsep",
+                    text: `${mat.bab}. ${mat.title}. ${mat.content}`
+                });
+
+                // Chunk 2: Formula & Example if present
+                if (mat.formula || mat.example) {
+                    candidateChunks.push({
+                        matId: mat.id,
+                        title: mat.title,
+                        subject: mat.subject,
+                        grade: mat.grade,
+                        bab: mat.bab,
+                        source: mat.source,
+                        chunkType: "Rumus & Perhitungan",
+                        text: `Rumus IPA: ${mat.formula || '-'}. Contoh Soal & Pembahasan: ${mat.example || '-'}`
+                    });
+                }
+
+                // Chunk 3: Glossary
+                if (mat.glossary) {
+                    candidateChunks.push({
+                        matId: mat.id,
+                        title: mat.title,
+                        subject: mat.subject,
+                        grade: mat.grade,
+                        bab: mat.bab,
+                        source: mat.source,
+                        chunkType: "Glosarium Istilah",
+                        text: `Glosarium Istilah Sains: ${mat.glossary}`
+                    });
+                }
+            });
+
+            if (candidateChunks.length === 0) {
+                return { topChunks: [], matchStatus: 'NONE', score: 0 };
+            }
+
+            // Clean & tokenize text helper
+            const tokenize = (str) => {
+                return str.toLowerCase()
+                    .replace(/[^\w\s]/gi, '')
+                    .split(/\s+/)
+                    .filter(w => w.length > 2);
+            };
+
+            const queryTokens = tokenize(queryText);
+
+            // Compute score for each chunk
+            candidateChunks.forEach(chunk => {
+                const chunkTokens = tokenize(chunk.text);
+                let score = 0;
+
+                queryTokens.forEach(qToken => {
+                    const count = chunkTokens.filter(cToken => cToken === qToken).length;
+                    score += count * 2;
+
+                    chunkTokens.forEach(cToken => {
+                        if (cToken.includes(qToken) || qToken.includes(cToken)) {
+                            score += 0.5;
+                        }
+                    });
+                });
+
+                // Extra boost if chunk matches active selected topic
+                if (activeChatTopic && chunk.matId === activeChatTopic) {
+                    score += 1.5;
+                }
+
+                chunk.score = score / (Math.log2(chunkTokens.length + 2));
+            });
+
+            // Sort by highest score
+            candidateChunks.sort((a, b) => b.score - a.score);
+
+            const bestScore = candidateChunks[0] ? candidateChunks[0].score : 0;
+            let matchStatus = 'NONE';
+            if (bestScore > 0.40) {
+                matchStatus = 'FULL';
+            } else if (bestScore > 0.12) {
+                matchStatus = 'PARTIAL';
+            }
+
+            const topChunks = candidateChunks.slice(0, topK).filter(c => c.score > 0.05);
+
+            return {
+                topChunks: topChunks,
+                matchStatus: matchStatus,
+                score: bestScore
+            };
+        }
+
+        async function handleChatSubmit(e) {
+            if (e) e.preventDefault();
+            const inputEl = document.getElementById('chatInput');
+            const userMsg = inputEl.value.trim();
+
+            if (!userMsg) return;
+
+            // Render User Bubble
+            renderUserMessage(userMsg);
+            inputEl.value = '';
+
+            // Render Bot Loading Placeholder
+            const loadingMsgId = renderBotLoading();
+
+            try {
+                // 1. Run Local RAG Retrieval
+                const ragResult = performRAGSearch(userMsg);
+
+                // Log Query to Teacher Analytics
+                logStudentQuery(userMsg, ragResult.matchStatus, ragResult.topChunks[0] ? ragResult.topChunks[0].bab : "Tidak Ada");
+
+                // 2. Prepare RAG Context String
+                let contextText = "";
+                if (ragResult.topChunks.length > 0) {
+                    contextText = ragResult.topChunks.map((c, i) => `
+--- [DOKUMEN MODUL ${i+1}: ${c.bab} | Source: ${c.source}] ---
+Tipe Materi: ${c.chunkType}
+Isi Teks: ${c.text}
+                    `).join("\n");
+                } else {
+                    contextText = "TIDAK ADA MODUL IPA VII RELEVAN DALAM DATABASE.";
+                }
+
+                // 3. System Instructions
+                const systemPrompt = `Anda adalah Si CANGKAL (Chatbot Andal Nambah Gasan Kawal Amun Belajar), tutor Sains AI yang antusias, ramah, dan mendidik khusus untuk siswa IPA Kelas 7 SMP/MTs (Kurikulum Merdeka).
+Tugas Anda adalah membantu siswa memahami konsep-konsep Ilmu Pengetahuan Alam (IPA) berdasarkan DATABASE MODUL GURU IPA KELAS 7 berikut:
+
+=== HASIL DATABASE MATERI IPA KELAS 7 (CONTEXT) ===
+${contextText}
+===================================================
+
+STATUS RELEVANSI DATABASE: ${ragResult.matchStatus}
+
+ATURAN UTAMA MENJAWAB:
+1. Utamakan konsep dan rumus sains dari DATABASE MATERI IPA KELAS 7 di atas.
+2. Gunakan bahasa Indonesia yang mudah dipahami anak usia SMP/MTs (Kelas 7).
+3. Untuk perhitungan fisik/kimia (seperti massa jenis, kalor, kecepatan, konversi suhu):
+   - Tuliskan Rumus dengan format LaTeX ($...$ atau $$...$$)
+   - Tuliskan langkah "Diketahui", "Ditanya", "Langkah Perhitungan", dan "Hasil Akhir beserta Satuannya".
+4. Gunakan analogi atau contoh nyata dalam kehidupan sehari-hari (contoh: air teh panas, es batu, sepeda, hewan sekitar).
+5. Jika materi di database kurang lengkap (PARTIAL/NONE), sampaikan penjelasan dasar yang akurat sesuai standar kurikulum IPA SMP Kelas 7 Kemendikbudristek.
+6. Jangan mengarang sumber rujukan buku jika tidak ada di context.
+7. Di bagian paling akhir, berikan 1 pertanyaan kuis singkat/latihan sederhana untuk menguji pemahaman siswa.`;
+
+                // 4. Call Gemini 3 Flash API
+                const apiKey = ""; // API key populated by environment runtime
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [
+                            { role: "user", parts: [{ text: `Pertanyaan Siswa IPA Kelas 7: "${userMsg}"` }] }
+                        ],
+                        systemInstruction: {
+                            parts: [{ text: systemPrompt }]
+                        }
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Gagal menghubungi server AI (Status: ${response.status})`);
+                }
+
+                const result = await response.json();
+                const botReplyText = result.candidates?.[0]?.content?.parts?.[0]?.text || "Maaf, terjadi kendala saat menyusun jawaban sains.";
+
+                // Remove loading bubble & Render Bot Answer
+                removeMessageElement(loadingMsgId);
+                renderBotMessage(botReplyText, ragResult);
+
+            } catch (error) {
+                console.error(error);
+                removeMessageElement(loadingMsgId);
+                renderBotMessage(`Maaf, terjadi kesalahan pada jaringan. Silakan coba lagi. Detail error: ${error.message}`, { matchStatus: 'NONE', topChunks: [] });
+            }
+        }
+
+        function renderUserMessage(text) {
+            const chatBox = document.getElementById('chatMessages');
+            const div = document.createElement('div');
+            div.className = "flex gap-3 justify-end";
+            div.innerHTML = `
+                <div class="max-w-[85%] space-y-1">
+                    <div class="p-3.5 rounded-2xl rounded-tr-none bg-brand-600 text-white text-sm leading-relaxed shadow-sm">
+                        ${escapeHtml(text)}
+                    </div>
+                    <span class="text-[10px] text-slate-400 block text-right">Anda</span>
+                </div>
+                <div class="w-8 h-8 rounded-lg bg-slate-200 text-slate-700 flex items-center justify-center shrink-0 mt-0.5 font-semibold text-xs">
+                    <i data-lucide="user" class="w-4 h-4"></i>
+                </div>
+            `;
+            chatBox.appendChild(div);
+            chatBox.scrollTop = chatBox.scrollHeight;
+            lucide.createIcons();
+        }
+
+        function renderBotLoading() {
+            const chatBox = document.getElementById('chatMessages');
+            const id = 'loading_' + Date.now();
+            const div = document.createElement('div');
+            div.id = id;
+            div.className = "flex gap-3";
+            div.innerHTML = `
+                <div class="w-8 h-8 rounded-lg bg-brand-600 text-white flex items-center justify-center shrink-0 mt-0.5">
+                    <i data-lucide="bot" class="w-4 h-4"></i>
+                </div>
+                <div class="p-3.5 rounded-2xl rounded-tl-none bg-slate-100 text-slate-600 text-sm border border-slate-200 flex items-center gap-2">
+                    <i data-lucide="loader" class="w-4 h-4 animate-spin text-brand-600"></i>
+                    <span>Menganalisis modul IPA VII & menyusun penjelasan...</span>
+                </div>
+            `;
+            chatBox.appendChild(div);
+            chatBox.scrollTop = chatBox.scrollHeight;
+            lucide.createIcons();
+            return id;
+        }
+
+        function removeMessageElement(id) {
+            const el = document.getElementById(id);
+            if (el) el.remove();
+        }
+
+        function renderBotMessage(text, ragResult) {
+            const chatBox = document.getElementById('chatMessages');
+            const div = document.createElement('div');
+            div.className = "flex gap-3";
+
+            // Citation Badge
+            let sourceBadgeHtml = "";
+            if (ragResult.matchStatus === 'FULL' && ragResult.topChunks.length > 0) {
+                const c = ragResult.topChunks[0];
+                sourceBadgeHtml = `
+                    <div class="mt-3 p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-900 flex items-start gap-2">
+                        <i data-lucide="book-check" class="w-4 h-4 text-emerald-600 shrink-0 mt-0.5"></i>
+                        <div>
+                            <span class="font-bold block">Sumber Modul Rujukan Guru:</span>
+                            <span>${c.bab} — ${c.title} (${c.source})</span>
+                        </div>
+                    </div>
+                `;
+            } else if (ragResult.matchStatus === 'PARTIAL' && ragResult.topChunks.length > 0) {
+                const c = ragResult.topChunks[0];
+                sourceBadgeHtml = `
+                    <div class="mt-3 p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-900 flex items-start gap-2">
+                        <i data-lucide="alert-circle" class="w-4 h-4 text-amber-600 shrink-0 mt-0.5"></i>
+                        <div>
+                            <span class="font-bold block">Rujukan Sebagian dari Database:</span>
+                            <span>${c.bab} (${c.source})</span>
+                        </div>
+                    </div>
+                `;
+            } else {
+                sourceBadgeHtml = `
+                    <div class="mt-3 p-2.5 rounded-xl bg-slate-100 border border-slate-200 text-xs text-slate-600 flex items-start gap-2">
+                        <i data-lucide="info" class="w-4 h-4 text-slate-400 shrink-0 mt-0.5"></i>
+                        <div>
+                            <span class="font-bold block">Status Materi:</span>
+                            <span>Menggunakan panduan standar Kurikulum Merdeka IPA Kelas 7 SMP.</span>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Convert markdown text
+            const parsedHtml = marked.parse(text);
+
+            div.innerHTML = `
+                <div class="w-8 h-8 rounded-lg bg-brand-600 text-white flex items-center justify-center shrink-0 mt-0.5">
+                    <i data-lucide="bot" class="w-4 h-4"></i>
+                </div>
+                <div class="max-w-[85%] space-y-2">
+                    <div class="p-4 rounded-2xl rounded-tl-none bg-slate-50 text-slate-800 text-sm leading-relaxed border border-slate-200 prose">
+                        ${parsedHtml}
+                        ${sourceBadgeHtml}
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="speakText(this)" data-text="${escapeHtml(text.replace(/[*#]/g, ''))}" class="text-[11px] text-slate-500 hover:text-brand-600 flex items-center gap-1 transition">
+                            <i data-lucide="volume-2" class="w-3.5 h-3.5"></i> Baca Suara
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            chatBox.appendChild(div);
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            // Render Math Latex if KaTeX is available
+            if (window.renderMathInElement) {
+                renderMathInElement(div, {
+                    delimiters: [
+                        {left: '$$', right: '$$', display: true},
+                        {left: '$', right: '$', display: false}
+                    ]
+                });
+            }
+
+            lucide.createIcons();
+        }
+
+        function quickPrompt(promptText) {
+            document.getElementById('chatInput').value = promptText;
+            handleChatSubmit();
+        }
+
+        function clearChatHistory() {
+            const chatBox = document.getElementById('chatMessages');
+            chatBox.innerHTML = `
+                <div class="flex gap-3">
+                    <div class="w-8 h-8 rounded-lg bg-brand-600 text-white flex items-center justify-center shrink-0 mt-0.5">
+                        <i data-lucide="bot" class="w-4 h-4"></i>
+                    </div>
+                    <div class="max-w-[85%] space-y-2">
+                        <div class="p-4 rounded-2xl rounded-tl-none bg-slate-100 text-slate-800 text-sm leading-relaxed border border-slate-200">
+                            <p class="font-semibold text-brand-700 mb-1">Percakapan Dibersihkan ✨</p>
+                            <p>Silakan ketik pertanyaan IPA Kelas 7 baru atau pilih bab dari menu di sebelah kiri!</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+            lucide.createIcons();
+            showToast("Riwayat percakapan telah dibersihkan.", "info");
+        }
+
+        function speakText(btn) {
+            const text = btn.getAttribute('data-text');
+            if (!('speechSynthesis' in window)) {
+                showToast("Browser tidak mendukung Pembaca Suara.", "error");
+                return;
+            }
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(text.substring(0, 300));
+            utterance.lang = 'id-ID';
+            utterance.rate = 1.0;
+            window.speechSynthesis.speak(utterance);
+            showToast("Memulai pembacaan suara...", "info");
+        }
+
+        function authenticateTeacher() {
+            const pin = document.getElementById('inputTeacherPin').value;
+            if (pin === 'guru123' || pin === 'admin') {
+                isAuthenticatedTeacher = true;
+                document.getElementById('teacherAuthCard').classList.add('hidden');
+                document.getElementById('teacherContent').classList.remove('hidden');
+                renderTeacherMaterials();
+                showToast("Berhasil masuk Portal Guru IPA!", "check");
+            } else {
+                showToast("Sandi/PIN Guru Salah! Silakan coba lagi.", "error");
+            }
+        }
+
+        function switchTeacherTab(tabId) {
+            ['tabList', 'tabSandbox', 'tabLogs'].forEach(t => {
+                document.getElementById(t).classList.add('hidden');
+            });
+            document.getElementById(tabId).classList.remove('hidden');
+
+            ['tabBtnList', 'tabBtnSandbox', 'tabBtnLogs'].forEach(b => {
+                const btn = document.getElementById(b);
+                btn.className = "pb-3 text-sm font-semibold text-slate-500 border-b-2 border-transparent hover:text-slate-800 flex items-center gap-2";
+            });
+
+            const activeBtnMap = {
+                'tabList': 'tabBtnList',
+                'tabSandbox': 'tabBtnSandbox',
+                'tabLogs': 'tabBtnLogs'
+            };
+            document.getElementById(activeBtnMap[tabId]).className = "pb-3 text-sm font-semibold text-brand-600 border-b-2 border-brand-600 flex items-center gap-2";
+            lucide.createIcons();
+        }
+
+        function renderTeacherMaterials() {
+            const container = document.getElementById('teacherMaterialGrid');
+            container.innerHTML = '';
+
+            const keyword = document.getElementById('teacherSearchKey').value.toLowerCase();
+
+            let filtered = appMaterials.filter(m => {
+                return m.title.toLowerCase().includes(keyword) || m.bab.toLowerCase().includes(keyword) || m.content.toLowerCase().includes(keyword);
+            });
+
+            if (filtered.length === 0) {
+                container.innerHTML = `<div class="col-span-2 text-center p-8 bg-white rounded-xl border border-slate-200 text-slate-400 text-xs">Tidak ada modul IPA ditemukan.</div>`;
+                return;
+            }
+
+            filtered.forEach(m => {
+                const card = document.createElement('div');
+                card.className = "bg-white rounded-2xl p-4 border border-slate-200 shadow-sm space-y-3 flex flex-col justify-between";
+                card.innerHTML = `
+                    <div class="space-y-2">
+                        <div class="flex items-center justify-between">
+                            <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">IPA — Kelas VII</span>
+                            <span class="text-[10px] text-slate-400">Diperbarui: ${m.updatedAt || 'Terbaru'}</span>
+                        </div>
+                        <h4 class="font-bold text-slate-900 text-sm">${m.title}</h4>
+                        <p class="text-xs text-slate-500 font-semibold">${m.bab}</p>
+                        <p class="text-xs text-slate-600 line-clamp-3 bg-slate-50 p-2 rounded-lg border border-slate-100">${m.content}</p>
+                    </div>
+
+                    <div class="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
+                        <span class="text-[11px] text-slate-400 truncate max-w-[200px]">📄 ${m.source || 'Modul Standar'}</span>
+                        <div class="flex items-center space-x-1">
+                            <button onclick="editMaterial('${m.id}')" class="p-1.5 rounded-lg text-slate-600 hover:bg-slate-100"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
+                            <button onclick="deleteMaterial('${m.id}')" class="p-1.5 rounded-lg text-red-600 hover:bg-red-50"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+            lucide.createIcons();
+        }
+
+        function openAddMaterialModal() {
+            document.getElementById('formMaterial').reset();
+            document.getElementById('matId').value = '';
+            document.getElementById('modalMaterialTitle').textContent = 'Tambah Modul IPA Kelas 7 Baru';
+            document.getElementById('modalMaterial').classList.remove('hidden');
+        }
+
+        function editMaterial(id) {
+            const m = appMaterials.find(item => item.id === id);
+            if (!m) return;
+            document.getElementById('matId').value = m.id;
+            document.getElementById('matBab').value = m.bab;
+            document.getElementById('matTitle').value = m.title;
+            document.getElementById('matGoal').value = m.goal || '';
+            document.getElementById('matContent').value = m.content;
+            document.getElementById('matFormula').value = m.formula || '';
+            document.getElementById('matGlossary').value = m.glossary || '';
+            document.getElementById('matExample').value = m.example || '';
+            document.getElementById('matSource').value = m.source || '';
+
+            document.getElementById('modalMaterialTitle').textContent = 'Edit Modul IPA Kelas 7';
+            document.getElementById('modalMaterial').classList.remove('hidden');
+        }
+
+        function saveMaterial(e) {
+            e.preventDefault();
+            const id = document.getElementById('matId').value;
+            const newObj = {
+                id: id || ('ipa_7_' + Date.now()),
+                subject: "IPA",
+                grade: "VII",
+                bab: document.getElementById('matBab').value,
+                title: document.getElementById('matTitle').value,
+                goal: document.getElementById('matGoal').value,
+                content: document.getElementById('matContent').value,
+                formula: document.getElementById('matFormula').value,
+                glossary: document.getElementById('matGlossary').value,
+                example: document.getElementById('matExample').value,
+                source: document.getElementById('matSource').value || 'Modul Teks Guru',
+                updatedAt: new Date().toISOString().split('T')[0]
+            };
+
+            if (id) {
+                const idx = appMaterials.findIndex(m => m.id === id);
+                if (idx !== -1) appMaterials[idx] = newObj;
+            } else {
+                appMaterials.unshift(newObj);
+            }
+
+            saveMaterialsToStorage();
+            closeModal('modalMaterial');
+            renderTeacherMaterials();
+            renderTopicsList();
+            showToast("Modul IPA berhasil disimpan ke RAG Database!", "check");
+        }
+
+        function deleteMaterial(id) {
+            if (confirm("Apakah Anda yakin ingin menghapus bab IPA ini dari database?")) {
+                appMaterials = appMaterials.filter(m => m.id !== id);
+                saveMaterialsToStorage();
+                renderTeacherMaterials();
+                renderTopicsList();
+                showToast("Modul telah dihapus.", "info");
+            }
+        }
+
+        function openUploadModal() {
+            uploadedExtractedText = "";
+            document.getElementById('fileInputDoc').value = "";
+            document.getElementById('filePreviewArea').classList.add('hidden');
+            document.getElementById('btnConfirmUpload').disabled = true;
+            document.getElementById('modalUpload').classList.remove('hidden');
+        }
+
+        async function handleFileSelected(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const statusText = document.getElementById('uploadStatusText');
+            statusText.classList.remove('hidden');
+
+            try {
+                if (file.type === 'application/pdf' || file.name.endsWith('.pdf')) {
+                    const arrayBuffer = await file.arrayBuffer();
+                    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+                    let text = "";
+                    for (let i = 1; i <= pdf.numPages; i++) {
+                        const page = await pdf.getPage(i);
+                        const content = await page.getTextContent();
+                        const pageText = content.items.map(item => item.str).join(' ');
+                        text += `\n--- Halaman ${i} ---\n` + pageText;
+                    }
+                    uploadedExtractedText = text;
+                } else {
+                    uploadedExtractedText = await file.text();
+                }
+
+                statusText.classList.add('hidden');
+                document.getElementById('filePreviewContent').textContent = uploadedExtractedText.substring(0, 500) + "...";
+                document.getElementById('filePreviewArea').classList.remove('hidden');
+                document.getElementById('btnConfirmUpload').disabled = false;
+                showToast("Teks dokumen IPA berhasil diekstraksi!", "check");
+            } catch (err) {
+                console.error(err);
+                statusText.classList.add('hidden');
+                showToast("Gagal membaca file. Pastikan format PDF/TXT valid.", "error");
+            }
+        }
+
+        function processDocUpload() {
+            const bab = document.getElementById('uploadBab').value || 'Bab Hasil Upload PDF';
+            const fileInput = document.getElementById('fileInputDoc');
+            const fileName = fileInput.files[0] ? fileInput.files[0].name : 'Dokumen_IPA.pdf';
+
+            const newMat = {
+                id: 'ipa_pdf_' + Date.now(),
+                subject: "IPA",
+                grade: "VII",
+                bab: bab,
+                title: `Hasil Ekstraksi Dokumen PDF IPA: ${fileName}`,
+                goal: "Dokumen PDF materi IPA Kelas 7 yang diimpor guru",
+                content: uploadedExtractedText,
+                formula: "",
+                glossary: "",
+                example: "",
+                source: fileName,
+                updatedAt: new Date().toISOString().split('T')[0]
+            };
+
+            appMaterials.unshift(newMat);
+            saveMaterialsToStorage();
+            closeModal('modalUpload');
+            renderTeacherMaterials();
+            renderTopicsList();
+            showToast("Dokumen IPA berhasil diimpor!", "check");
+        }
+
+        function runRAGTest() {
+            const query = document.getElementById('sandboxQuery').value.trim();
+            if (!query) return;
+
+            const res = performRAGSearch(query, 5);
+            const container = document.getElementById('sandboxResults');
+            container.classList.remove('hidden');
+
+            let html = `
+                <div class="flex items-center justify-between text-xs font-semibold p-2.5 rounded-xl ${res.matchStatus==='FULL'?'bg-emerald-50 text-emerald-800':res.matchStatus==='PARTIAL'?'bg-amber-50 text-amber-800':'bg-red-50 text-red-800'}">
+                    <span>Status Pencarian RAG: ${res.matchStatus}</span>
+                    <span>Skor Tertinggi: ${res.score.toFixed(3)}</span>
+                </div>
+            `;
+
+            if (res.topChunks.length === 0) {
+                html += `<p class="text-xs text-slate-500 italic p-2">Tidak ada chunk modul IPA yang relevan.</p>`;
+            } else {
+                res.topChunks.forEach((c, idx) => {
+                    html += `
+                        <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs space-y-1">
+                            <div class="flex justify-between font-bold text-slate-800">
+                                <span>#${idx+1} [Skor: ${c.score.toFixed(3)}] ${c.bab} - ${c.title}</span>
+                                <span class="text-[10px] bg-white px-2 py-0.5 rounded border text-emerald-700 font-semibold">${c.chunkType}</span>
+                            </div>
+                            <p class="text-slate-600 text-[11px]">${c.text}</p>
+                            <span class="text-[10px] text-slate-400 block">Sumber: ${c.source}</span>
+                        </div>
+                    `;
+                });
+            }
+
+            container.innerHTML = html;
+        }
+
+        function logStudentQuery(query, status, sourceTitle) {
+            studentQueryLogs.unshift({
+                time: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
+                query: query,
+                status: status,
+                source: sourceTitle
+            });
+            if (studentQueryLogs.length > 50) studentQueryLogs.pop();
+            saveStudentLogsToStorage();
+            renderStudentLogsTable();
+        }
+
+        function renderStudentLogsTable() {
+            const tbody = document.getElementById('studentLogsTableBody');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+
+            if (studentQueryLogs.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-slate-400">Belum ada riwayat pertanyaan siswa.</td></tr>`;
+                return;
+            }
+
+            studentQueryLogs.forEach(log => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="p-3 font-mono text-slate-500">${log.time}</td>
+                    <td class="p-3 font-medium text-slate-800">${escapeHtml(log.query)}</td>
+                    <td class="p-3">
+                        <span class="px-2 py-0.5 rounded text-[10px] font-bold ${log.status==='FULL'?'bg-emerald-50 text-emerald-700':log.status==='PARTIAL'?'bg-amber-50 text-amber-700':'bg-red-50 text-red-700'}">${log.status}</span>
+                    </td>
+                    <td class="p-3 text-slate-500">${log.source}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function clearStudentLogs() {
+            studentQueryLogs = [];
+            saveStudentLogsToStorage();
+            renderStudentLogsTable();
+            showToast("Log pertanyaan telah dibersihkan.", "info");
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.add('hidden');
+        }
+
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toastMsg');
+            const toastIcon = document.getElementById('toastIcon');
+
+            toastMsg.textContent = message;
+            if (type === 'check') {
+                toastIcon.setAttribute('data-lucide', 'check-circle');
+            } else if (type === 'error') {
+                toastIcon.setAttribute('data-lucide', 'alert-triangle');
+            } else {
+                toastIcon.setAttribute('data-lucide', 'info');
+            }
+            lucide.createIcons();
+
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+
+        function escapeHtml(str) {
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+    </script>
+</body>
+</html>
